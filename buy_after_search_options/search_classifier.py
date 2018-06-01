@@ -27,18 +27,12 @@ porcentagem_de_teste = 0.1
 tamanho_de_treino = porcentagem_de_treino * len(Y)
 tamanho_de_teste = porcentagem_de_teste * len(Y)
 tamanho_de_validacao = len(Y) - tamanho_de_treino - tamanho_de_teste
-
-treino_dados = X[0:int(tamanho_de_treino)]
-treino_marcacoes = Y[0:int(tamanho_de_treino)]
-
 fim_de_teste = tamanho_de_treino + tamanho_de_teste
-teste_dados = X[int(tamanho_de_treino):int(fim_de_teste)]
-teste_marcacoes = Y[int(tamanho_de_treino):int(fim_de_teste)]
 
-validacao_dados = X[int(fim_de_teste):]
-validacao_marcacoes = Y[int(fim_de_teste):]
-
-
+from examples import Examples
+trainig_examples = Examples(X[0:int(tamanho_de_treino)], Y[0:int(tamanho_de_treino)])
+test_examples = Examples(X[int(tamanho_de_treino):int(fim_de_teste)], Y[int(tamanho_de_treino):int(fim_de_teste)])
+real_examples = Examples(X[int(fim_de_teste):], Y[int(fim_de_teste):])
 
 def fit_and_predict(nome, modelo, treino_dados, treino_marcacoes, teste_dados, teste_marcacoes):
 	modelo.fit(treino_dados, treino_marcacoes)
@@ -57,12 +51,12 @@ def fit_and_predict(nome, modelo, treino_dados, treino_marcacoes, teste_dados, t
 
 from sklearn.naive_bayes import MultinomialNB
 modeloMultinomial = MultinomialNB()
-resultadoMultinomial = fit_and_predict("MultinomialNB", modeloMultinomial, treino_dados, treino_marcacoes, teste_dados, teste_marcacoes)
+resultadoMultinomial = fit_and_predict("MultinomialNB", modeloMultinomial, trainig_examples.features, trainig_examples.target, test_examples.features, test_examples.target)
 
 
 from sklearn.ensemble import AdaBoostClassifier
 modeloAdaBoost = AdaBoostClassifier()
-resultadoAdaBoost = fit_and_predict("AdaBoostClassifier", modeloAdaBoost, treino_dados, treino_marcacoes, teste_dados, teste_marcacoes)
+resultadoAdaBoost = fit_and_predict("AdaBoostClassifier", modeloAdaBoost, trainig_examples.features, trainig_examples.target, test_examples.features, test_examples.target)
 
 
 if resultadoMultinomial > resultadoAdaBoost:
@@ -70,11 +64,11 @@ if resultadoMultinomial > resultadoAdaBoost:
 else:
 	vencedor = modeloAdaBoost
 
-resultado = vencedor.predict(validacao_dados)
-acertos = (resultado == validacao_marcacoes)
+resultado = vencedor.predict(real_examples.features)
+acertos = (resultado == real_examples.target)
 
 total_de_acertos = sum(acertos)
-total_de_elementos = len(validacao_marcacoes)
+total_de_elementos = len(real_examples.target)
 taxa_de_acerto = 100.0 * total_de_acertos / total_de_elementos
 
 msg = "Taxa de acerto do vencedor entre os dois algoritmos no mundo real: {0}".format(taxa_de_acerto)
@@ -92,10 +86,10 @@ print(msg)
 
 # a eficacia do algoritmo que chuta
 # tudo um unico valor
-acerto_base = max(Counter(validacao_marcacoes).values())
-taxa_de_acerto_base = 100.0 * acerto_base / len(validacao_marcacoes)
+acerto_base = max(Counter(real_examples.target).values())
+taxa_de_acerto_base = 100.0 * acerto_base / len(real_examples.target)
 print("Taxa de acerto base: %f" % taxa_de_acerto_base)
-print("Total de testes: %d " % len(validacao_dados))
+print("Total de testes: %d " % len(real_examples.features))
 
 
 
